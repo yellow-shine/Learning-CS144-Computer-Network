@@ -1,38 +1,23 @@
 Checkpoint 3 Writeup
 ====================
 
-My name: [your name here]
+My name: [Stanford identity/email homework not executed]
 
-My SUNet ID: [your sunetid here]
+My SUNet ID: [not executed]
 
-I collaborated with: [list sunetids here]
+I collaborated with: none
 
-I would like to thank/reward these classmates for their help: [list sunetids here]
+I would like to thank/reward these classmates for their help: none
 
-This checkpoint took me about [n] hours to do. I [did/did not] attend the lab session.
+This checkpoint took me about [n] hours to do. I did not attend the lab session.
 
-Program Structure and Design of the TCPSender [Describe data
-structures and approach taken. Describe alternative designs considered
-or tested.  Describe benefits and weaknesses of your design compared
-with alternatives -- perhaps in terms of simplicity/complexity, risk
-of bugs, asymptotic performance, empirical performance, required
-implementation time and difficulty, and other factors. Include any
-measurements if applicable.]: []
+Program Structure and Design of the TCPSender:
+Outstanding segments live in a deque; in-flight count is their sequence_length sum. push fills an effective window (0 treated as 1 for probing only). SYN/FIN occupy seqnos. Timer starts on first seq-using send, stops when nothing is outstanding, restarts on a new legal ack. Timeout retransmits the earliest whole segment; exponential backoff only if the real window is nonzero. Illegal ack (ackno > next_abs_) updates the window field but does not reset RTO.
 
 Report from the hands-on component: []
 
 Implementation Challenges:
-[]
+[zero-window probe vs full nonzero window; FIN deferred when it would exceed the window; RST on stream error]
 
 Remaining Bugs:
-[]
-
-- Optional: I had unexpected difficulty with: [describe]
-
-- Optional: I think you could make this lab better by: [describe]
-
-- Optional: I was surprised by: [describe]
-
-- Optional: I'm not sure about: [describe]
-
-- Optional: I made an extra test I think will be helpful in catching bugs: [describe where to find]
+[none known]
