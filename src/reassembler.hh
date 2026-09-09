@@ -2,6 +2,11 @@
 
 #include "byte_stream.hh"
 
+#include <cstdint>
+#include <map>
+#include <optional>
+#include <string>
+
 class Reassembler
 {
 public:
@@ -43,4 +48,7 @@ public:
 
 private:
   ByteStream output_;
+  uint64_t next_index_ {};
+  std::map<uint64_t, std::string> pending_ {};
+  std::optional<uint64_t> eof_index_ {};
 };
