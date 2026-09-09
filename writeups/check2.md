@@ -1,36 +1,22 @@
 Checkpoint 2 Writeup
 ====================
 
-My name: [your name here]
+My name: [Stanford identity/email homework not executed]
 
-My SUNet ID: [your sunetid here]
+My SUNet ID: [not executed]
 
-I collaborated with: [list sunetids here]
+I collaborated with: none
 
-I would like to thank/reward these classmates for their help: [list sunetids here]
+I would like to thank/reward these classmates for their help: none
 
-This lab took me about [n] hours to do. I [did/did not] attend the lab session.
+This lab took me about [n] hours to do. I did not attend the lab session.
 
-Describe Wrap32 and TCPReceiver structure and design. [Describe data
-structures and approach taken. Describe alternative designs considered
-or tested.  Describe benefits and weaknesses of your design compared
-with alternatives -- perhaps in terms of simplicity/complexity, risk
-of bugs, asymptotic performance, empirical performance, required
-implementation time and difficulty, and other factors. Include any
-measurements if applicable.]
+Wrap32: wrap is `zero_point + uint32(n)`. unwrap takes the signed 32-bit offset from the checkpoint's wrap and adds `2^32` if that lands negative.
+
+TCPReceiver keeps `optional<Wrap32> isn_`. No SYN → no ackno, drop non-RST. RST → `set_error()`. Stream index is 0 on the SYN payload, else `abs_seqno - 1`. ackno is `wrap(bytes_pushed + 1 [+1 if closed])`. window is `min(available_capacity, UINT16_MAX)`.
 
 Implementation Challenges:
-[]
+[SYN/FIN occupy seq space but not the ByteStream; FIN still closes only after the reassembler fills up to that index.]
 
 Remaining Bugs:
-[]
-
-- Optional: I had unexpected difficulty with: [describe]
-
-- Optional: I think you could make this lab better by: [describe]
-
-- Optional: I was surprised by: [describe]
-
-- Optional: I'm not sure about: [describe]
-
-- Optional: I made an extra test I think will be helpful in catching bugs: [describe where to find]
+[none known]
