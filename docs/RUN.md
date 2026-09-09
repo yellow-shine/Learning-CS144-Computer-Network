@@ -1,16 +1,14 @@
 # 运行
 
-镜像基于 `ubuntu:24.04`。apt 使用清华源：ARM 为 `https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports`，amd64 为 `https://mirrors.tuna.tsinghua.edu.cn/ubuntu`。
+镜像基于 `ubuntu:24.04`（g++ 13、CMake ≥ 3.24、Ninja）。Docker 构建会把 `http_proxy` / `https_proxy` / `HTTP_PROXY` / `HTTPS_PROXY` 传给 `apt-get`。
 
-Intended path：从本仓库 `Dockerfile` 构建 `cs144-minnow`，再进入容器：
-
+    export http_proxy=http://192.168.71.40:7890
+    export https_proxy=http://192.168.71.40:7890
+    export HTTP_PROXY=http://192.168.71.40:7890
+    export HTTPS_PROXY=http://192.168.71.40:7890
     ./scripts/dev.sh bash
 
-当前 Docker Hub / apt 从 Docker VM 不可达，不要 `docker build` `ubuntu:24.04`。空构建改用本机已有镜像：
-
-    CS144_IMAGE=jenkins-agent:task2-fixes ./scripts/dev.sh bash
-
-`scripts/dev.sh` 在 `cs144-minnow` 不存在时也会回退到 `jenkins-agent:task2-fixes`。空构建：
+空构建：
 
     ./scripts/dev.sh bash -lc 'g++ --version; cmake --version; cmake -S . -B build -G Ninja && cmake --build build'
 
