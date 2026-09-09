@@ -1,11 +1,14 @@
 #pragma once
 
 #include "address.hh"
+#include "arp_message.hh"
 #include "ethernet_frame.hh"
 #include "ipv4_datagram.hh"
 
+#include <map>
 #include <memory>
 #include <queue>
+#include <vector>
 
 // A "network interface" that connects IP (the internet layer, or network layer)
 // with Ethernet (the network access layer, or link layer).
@@ -82,4 +85,14 @@ private:
 
   // Datagrams that have been received
   std::queue<InternetDatagram> datagrams_received_ {};
+
+  struct ARPEntry
+  {
+    EthernetAddress eth {};
+    size_t ttl_ms { 30000 };
+  };
+
+  std::map<uint32_t, ARPEntry> arp_table_ {};
+  std::map<uint32_t, size_t> arp_wait_ms_ {};
+  std::map<uint32_t, std::vector<InternetDatagram>> pending_datagrams_ {};
 };
