@@ -22,3 +22,16 @@ Tool only. Did not run a 1-hour public ping. Sent count is icmp_seq span, not 36
 | `python3 scripts/ping_analyze.py testdata/ping_sample.txt` | 通过 | rc 0, `delivery_rate=4/5=0.8`, `longest_loss=1`, PASS |
 | 3 Internet paths × ≥1 hour | 未验证 | capture deferred until user names targets/windows |
 | high-rate <10s throughput sweep | 未验证 | not run against the public Internet |
+
+## Checkpoint 7
+
+Sanitized apps built. Did not change util/tests. Local dual-end ≠ independent
+peer. No partner → Group portion 未验证. `scripts/local_relay.py` is not the
+course environment.
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| official relay `cs144.keithw.org` | 未验证 | DNS `104.196.238.229`; TCP :80/:443 ok; UDP even/odd bounce timeout on host and in container; `timeout 12 ./build/apps/endtoend server cs144.keithw.org 38142` + client 38143: server `listening`, client `connecting to 172.16.0.100:1234`, rc 124 |
+| self dual-end conversation | 通过 (local relay) | `python3 scripts/local_relay.py 45128`; `endtoend server/client 127.0.0.1 45128/9`; exchanged `hello-from-client` / `hello-from-server`; both `TCP connection finished cleanly` |
+| self dual-end 1MiB | 通过 (local relay) | `dd … of=/tmp/big.txt`; server `< /tmp/big.txt`, client `</dev/null > /tmp/big-received.txt`; sha256 `3725efe5efe48663a22ffc34e592283ed48b16d8d76cae9b0417115611f0f899` both, 1048576 bytes |
+| Group portion vs other impl | 未验证 | no partner |
