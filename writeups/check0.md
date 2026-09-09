@@ -1,33 +1,29 @@
 Checkpoint 0 Writeup
 ====================
 
-My name: [your name here]
+My name: [Stanford identity/email homework not executed]
 
-My SUNet ID: [your sunetid here]
+My SUNet ID: [not executed]
 
-I collaborated with: [list sunetids here]
+I collaborated with: none
 
-I would like to credit/thank these classmates for their help: [list sunetids here]
+I would like to credit/thank these classmates for their help: none
 
-This lab took me about [n] hours to do. I [did/did not] attend the lab session.
+This lab took me about [n] hours to do. I did not attend the lab session.
 
-My secret code from section 2.1 was: [code here]
+My secret code from section 2.1 was: [Stanford email homework not executed]
 
-I was surprised by or edified to learn that: [describe]
+I was surprised by or edified to learn that: HTTP/1.1 keep-alive means the client must send Connection: close and read until EOF, or it hangs waiting for the next request.
 
-Describe ByteStream implementation. [Describe data structures and
-approach taken. Describe alternative designs considered or tested.
-Describe benefits and weaknesses of your design compared with
-alternatives -- perhaps in terms of simplicity/complexity, risk of
-bugs, asymptotic performance, empirical performance, required
-implementation time and difficulty, and other factors. Include any
-measurements if applicable.]
+ByteStream: `std::string buffer_` plus `start_` on the base class (not `deque`).
 
-- Optional: I had unexpected difficulty with: [describe]
+- string: `peek()` is one contiguous `string_view` (tests compare the whole view); one allocation; compact with `erase` when `start_ > 4096` and half consumed.
+- `deque<char>` / `deque<string>`: extra fragments, so `peek()` needs a copy or cannot be one view; more code for little gain.
 
-- Optional: I think you could make this lab better by: [describe]
+Chose string.
 
-- Optional: I'm not sure about: [describe]
+webget: `TCPSocket` to `host:http`, `GET` HTTP/1.1 with `Host` and `Connection: close`, `\r\n` line endings, `shutdown(SHUT_WR)`, read until EOF. Depends on external HTTP to `cs144.keithw.org:80`.
 
-- Optional: I contributed a new test case that catches a plausible bug
-  not otherwise caught: [provide Pull Request URL]
+外部待验证: DNS resolves `104.196.238.229`; host direct TCP to :80 times out; container connect then immediate EOF (0 bytes); HTTP proxy `http://192.168.71.40:7890` returns 502. Did not change tests.
+
+- Optional: I had unexpected difficulty with: this network cannot reach the course hasher over port 80.

@@ -4,13 +4,22 @@
 #include <iostream>
 #include <span>
 #include <string>
+#include <sys/socket.h>
 
 using namespace std;
 
 void get_URL( const string& host, const string& path )
 {
-  cerr << "Function called: get_URL(" << host << ", " << path << ")\n";
-  cerr << "Warning: get_URL() has not been implemented yet.\n";
+  TCPSocket sock;
+  sock.connect( Address { host, "http" } );
+  const string req = "GET " + path + " HTTP/1.1\r\nHost: " + host + "\r\nConnection: close\r\n\r\n";
+  sock.write( req );
+  sock.shutdown( SHUT_WR );
+  while ( not sock.eof() ) {
+    string buf;
+    sock.read( buf );
+    cout << buf;
+  }
 }
 
 int main( int argc, char* argv[] )
