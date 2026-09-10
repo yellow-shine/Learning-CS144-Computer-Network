@@ -68,8 +68,14 @@ def _esc(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def write_svg(path: Path, xs: list[float], ys: list[float], xlabel: str, ylabel: str,
-              xlabels: tuple[str, str] | None = None) -> None:
+def write_svg(
+    path: Path,
+    xs: list[float],
+    ys: list[float],
+    xlabel: str,
+    ylabel: str,
+    xlabels: tuple[str, str] | None = None,
+) -> None:
     w, h, p = 640, 280, 52
     xmin, xmax = min(xs), max(xs)
     ymin, ymax = min(ys), max(ys)
@@ -77,25 +83,28 @@ def write_svg(path: Path, xs: list[float], ys: list[float], xlabel: str, ylabel:
         xmax += 1.0
     if ymin == ymax:
         ymax += 1.0
+
     def sx(x: float) -> float:
         return p + (x - xmin) / (xmax - xmin) * (w - 2 * p)
+
     def sy(y: float) -> float:
         return h - p - (y - ymin) / (ymax - ymin) * (h - 2 * p)
+
     pts = " ".join(f"{sx(x):.1f},{sy(y):.1f}" for x, y in zip(xs, ys, strict=True))
     xl0, xl1 = xlabels if xlabels else (f"{xmin:g}", f"{xmax:g}")
     path.write_text(
         f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
   <rect width="100%" height="100%" fill="#fff"/>
-  <line x1="{p}" y1="{h-p}" x2="{w-p}" y2="{h-p}" stroke="#000"/>
-  <line x1="{p}" y1="{p}" x2="{p}" y2="{h-p}" stroke="#000"/>
+  <line x1="{p}" y1="{h - p}" x2="{w - p}" y2="{h - p}" stroke="#000"/>
+  <line x1="{p}" y1="{p}" x2="{p}" y2="{h - p}" stroke="#000"/>
   <polyline fill="none" stroke="#06c" stroke-width="1.5" points="{pts}"/>
-  <text x="{w/2}" y="{h-10}" text-anchor="middle" font-size="12">{_esc(xlabel)}</text>
-  <text x="14" y="{h/2}" font-size="12" transform="rotate(-90 14 {h/2})">{_esc(ylabel)}</text>
-  <text x="{p}" y="{h-p+16}" font-size="10">{_esc(xl0)}</text>
-  <text x="{w-p}" y="{h-p+16}" text-anchor="end" font-size="10">{_esc(xl1)}</text>
-  <text x="{p-4}" y="{h-p}" text-anchor="end" font-size="10">{ymin:g}</text>
-  <text x="{p-4}" y="{p+10}" text-anchor="end" font-size="10">{ymax:g}</text>
+  <text x="{w / 2}" y="{h - 10}" text-anchor="middle" font-size="12">{_esc(xlabel)}</text>
+  <text x="14" y="{h / 2}" font-size="12" transform="rotate(-90 14 {h / 2})">{_esc(ylabel)}</text>
+  <text x="{p}" y="{h - p + 16}" font-size="10">{_esc(xl0)}</text>
+  <text x="{w - p}" y="{h - p + 16}" text-anchor="end" font-size="10">{_esc(xl1)}</text>
+  <text x="{p - 4}" y="{h - p}" text-anchor="end" font-size="10">{ymin:g}</text>
+  <text x="{p - 4}" y="{p + 10}" text-anchor="end" font-size="10">{ymax:g}</text>
 </svg>
 '''
     )
@@ -126,7 +135,9 @@ def analyze(path: Path) -> int:
             adj_y.append(replies[s + 1][1])
     rtt_corr = pearson(adj_x, adj_y)
 
-    print(f"sent={sent} received={received} delivery_rate={received}/{sent}={delivery:.6g}")
+    print(
+        f"sent={sent} received={received} delivery_rate={received}/{sent}={delivery:.6g}"
+    )
     print(f"longest_success={longest_success} longest_loss={longest_loss}")
     print(f"rtt_min_ms={rtt_min:g} rtt_max_ms={rtt_max:g}")
     print(f"rtt_adjacent_corr={rtt_corr:.6g}")

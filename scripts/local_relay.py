@@ -20,7 +20,11 @@ def main() -> None:
         s.bind(("127.0.0.1", port))
         socks.append(s)
     peer: list[tuple[str, int] | None] = [None, None]
-    print(f"local_relay 127.0.0.1:{even} <-> 127.0.0.1:{odd} (not course relay)", file=sys.stderr, flush=True)
+    print(
+        f"local_relay 127.0.0.1:{even} <-> 127.0.0.1:{odd} (not course relay)",
+        file=sys.stderr,
+        flush=True,
+    )
     while True:
         ready, _, _ = select.select(socks, [], [])
         for s in ready:
