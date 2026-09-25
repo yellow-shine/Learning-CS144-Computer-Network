@@ -92,7 +92,7 @@ private:
     size_t ttl_ms { 30000 };
   };
 
-  std::map<uint32_t, ARPEntry> arp_table_ {};
-  std::map<uint32_t, size_t> arp_wait_ms_ {};
+  std::map<uint32_t, ARPEntry> arp_table_ {}; // 学到的 IP→MAC，30s 过期
+  std::map<uint32_t, size_t> arp_wait_ms_ {}; // 同一 IP 5s 内不重复发 ARP
   std::map<uint32_t, std::vector<InternetDatagram>> pending_datagrams_ {};
 };

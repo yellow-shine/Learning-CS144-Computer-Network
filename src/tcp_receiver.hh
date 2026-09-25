@@ -29,5 +29,5 @@ public:
 
 private:
   Reassembler reassembler_;
-  std::optional<Wrap32> isn_ {};
+  std::optional<Wrap32> isn_ {}; // 空表示还没看到 SYN，此时不能出 ackno
 };

@@ -22,11 +22,12 @@ public:
   bool has_error() const { return error_; }; // Has the stream had an error?
 
 protected:
+  // 容量只限制尚未读走的字节，不限制整条流的长度。
   uint64_t capacity_;
   bool error_ {};
   bool closed_ {};
-  std::string buffer_ {};
-  uint64_t start_ {};
+  std::string buffer_ {}; // 已写入但还没压缩掉的前缀
+  uint64_t start_ {};     // buffer_ 里已 pop 的字节数；peek 从这里开始
   uint64_t bytes_pushed_ {};
   uint64_t bytes_popped_ {};
 };

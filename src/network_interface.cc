@@ -8,6 +8,8 @@
 
 using namespace std;
 
+// 实现思路：已知下一跳 MAC 就立刻发 IPv4。未知则广播 ARP 并排队；
+// 5 秒内不重复请求。请求和应答都学习映射，30 秒过期。本实验不重试 ARP。
 static constexpr size_t ARP_RETX_MS = 5000;
 static constexpr size_t ARP_TTL_MS = 30000;
 
@@ -45,7 +47,7 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
 
   pending_datagrams_[next_ip].push_back( dgram );
   if ( arp_wait_ms_.contains( next_ip ) ) {
-    return;
+    return; // 5 秒内已经问过，只排队
   }
   arp_wait_ms_[next_ip] = ARP_RETX_MS;
   ARPMessage arp;
@@ -65,6 +67,7 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
 //! \param[in] frame the incoming Ethernet frame
 void NetworkInterface::recv_frame( EthernetFrame frame )
 {
+  // 不是发给本机、也不是广播，丢掉。
   if ( frame.header.dst != ethernet_address_ && frame.header.dst != ETHERNET_BROADCAST ) {
     return;
   }
@@ -86,6 +89,7 @@ void NetworkInterface::recv_frame( EthernetFrame frame )
     return;
   }
 
+  // 请求和应答都学习发送方映射。
   arp_table_[arp.sender_ip_address] = ARPEntry { arp.sender_ethernet_address, ARP_TTL_MS };
   arp_wait_ms_.erase( arp.sender_ip_address );
 
@@ -125,7 +129,7 @@ void NetworkInterface::tick( const size_t ms_since_last_tick )
   }
   for ( auto it = arp_wait_ms_.begin(); it != arp_wait_ms_.end(); ) {
     if ( it->second <= ms_since_last_tick ) {
-      pending_datagrams_.erase( it->first );
+      pending_datagrams_.erase( it->first ); // 测试要求：等不到应答就丢掉排队报文
       it = arp_wait_ms_.erase( it );
     } else {
       it->second -= ms_since_last_tick;

@@ -48,7 +48,8 @@ public:
 
 private:
   ByteStream output_;
-  uint64_t next_index_ {};
+  uint64_t next_index_ {}; // 下一个要写入 ByteStream 的流下标
+  // 不重叠的待组装区间：key 是起始下标。重复字节只留一份。
   std::map<uint64_t, std::string> pending_ {};
-  std::optional<uint64_t> eof_index_ {};
+  std::optional<uint64_t> eof_index_ {}; // 流结束下标；裁掉的最后一段也要记下
 };

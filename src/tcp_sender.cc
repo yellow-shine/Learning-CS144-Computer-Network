@@ -5,6 +5,10 @@
 
 using namespace std;
 
+// 实现思路：deque 按发送顺序存未确认整段。push 填窗口；窗口为 0 时只在这次
+// push 里假装成 1（零窗口探测），记住的 window_size_ 不变。超时重传最早一段；
+// 只有真实窗口非 0 才加倍 RTO。非法 ack（超过 next_abs_）不重置定时器。
+
 uint64_t TCPSender::sequence_numbers_in_flight() const
 {
   uint64_t n = 0;
@@ -33,6 +37,7 @@ TCPSenderMessage TCPSender::make_message( uint64_t abs_seqno, bool syn, string p
 void TCPSender::send_segment( const TCPSenderMessage& msg, const TransmitFunction& transmit )
 {
   transmit( msg );
+  // 空段不占序号，不重传。
   if ( msg.sequence_length() == 0 ) {
     return;
   }
@@ -55,6 +60,7 @@ void TCPSender::push( const TransmitFunction& transmit )
     return;
   }
 
+  // 零窗口探测：只在本次发送时把窗口当成 1，不改记下的 window_size_。
   const uint64_t effective_window = window_size_ == 0 ? 1 : window_size_;
 
   while ( true ) {
@@ -81,6 +87,7 @@ void TCPSender::push( const TransmitFunction& transmit )
     used += payload.size();
     msg.payload = move( payload );
 
+    // FIN 也占窗口。放不下就留到下次，不能和数据硬塞在一起。
     if ( reader().is_finished() && not fin_sent_ && used < remaining ) {
       msg.FIN = true;
       fin_sent_ = true;
@@ -103,7 +110,7 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
     return;
   }
 
-  window_size_ = msg.window_size;
+  window_size_ = msg.window_size; // 无 ackno 或非法 ack 也要更新窗口
 
   if ( not msg.ackno.has_value() ) {
     return;
@@ -111,7 +118,7 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
 
   const uint64_t abs_ack = msg.ackno->unwrap( isn_, next_abs_ );
   if ( abs_ack > next_abs_ ) {
-    return;
+    return; // 超出已发送范围：不重置 RTO
   }
 
   const bool new_ack = abs_ack > ack_abs_;
@@ -153,7 +160,7 @@ void TCPSender::tick( uint64_t ms_since_last_tick, const TransmitFunction& trans
     return;
   }
 
-  transmit( outstanding_.front() );
+  transmit( outstanding_.front() ); // 重传最早整段，不合并、不裁掉已确认前缀
   if ( window_size_ != 0 ) {
     ++consecutive_retransmissions_;
     rto_ms_ *= 2;

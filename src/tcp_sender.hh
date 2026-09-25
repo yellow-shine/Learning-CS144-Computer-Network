@@ -37,13 +37,13 @@ private:
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
   uint64_t rto_ms_;
-  uint64_t next_abs_ {};
-  uint64_t ack_abs_ {};
-  uint64_t window_size_ { 1 };
+  uint64_t next_abs_ {}; // 下一个要发送的绝对序号（含 SYN）
+  uint64_t ack_abs_ {};  // 已确认到的绝对序号
+  uint64_t window_size_ { 1 }; // 收到通告前按 1；0 只在 push 里临时当成 1
   uint64_t consecutive_retransmissions_ {};
   bool timer_running_ {};
   uint64_t timer_remaining_ms_ {};
   bool syn_sent_ {};
   bool fin_sent_ {};
-  std::deque<TCPSenderMessage> outstanding_ {};
+  std::deque<TCPSenderMessage> outstanding_ {}; // 只存占序号的整段，不裁剪
 };

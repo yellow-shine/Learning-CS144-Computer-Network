@@ -32,6 +32,7 @@ def main() -> None:
             data, addr = s.recvfrom(65535)
             peer[i] = addr
             dst = peer[1 - i]
+            # 对端还没发过包时丢掉这一包。endtoend 会先发三次空 UDP 注册。
             if dst is not None:
                 socks[1 - i].sendto(data, dst)
 

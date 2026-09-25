@@ -4,8 +4,12 @@
 
 using namespace std;
 
+// 实现思路：map 存不重叠区间。窗口是 [next_index, next_index+available_capacity)，
+// 窗外丢弃。eof 先按原始长度记下，裁掉之后不能提前 close。
+
 void Reassembler::insert( uint64_t first_index, string data, bool is_last_substring )
 {
+  // 结束下标用未裁剪的长度。空的最后一段也是合法 EOF。
   if ( is_last_substring ) {
     eof_index_ = first_index + data.size();
   }
@@ -31,6 +35,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
       auto prev = std::prev( it );
       if ( prev->first + prev->second.size() >= first_index ) {
         const uint64_t prev_end = prev->first + prev->second.size();
+        // 只拼尚未覆盖的后缀，重复字节不再存一份。
         if ( first_index + data.size() > prev_end ) {
           prev->second.append( data.substr( prev_end - first_index ) );
         }
@@ -59,6 +64,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     next_index_ += n;
   }
 
+  // 洞填上之前不能 close，即使已经看到 FIN。
   if ( eof_index_.has_value() && next_index_ >= *eof_index_ ) {
     w.close();
   }

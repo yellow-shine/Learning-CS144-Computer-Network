@@ -4,6 +4,9 @@
 
 using namespace std;
 
+// 实现思路：路由表线性扫描，取最长前缀。无匹配或 TTL 减到 0 就丢。
+// 直接连接的下一跳是目的地址本身。改 TTL 后必须重算校验和。
+
 // route_prefix: The "up-to-32-bit" IPv4 address prefix to match the datagram's destination address against
 // prefix_length: For this route to be applicable, how many high-order (most-significant) bits of
 //    the route_prefix will need to match the corresponding bits of the datagram's destination address?
@@ -24,7 +27,7 @@ void Router::add_route( const uint32_t route_prefix,
 static bool prefix_match( uint32_t addr, uint32_t prefix, uint8_t len )
 {
   if ( len == 0 ) {
-    return true; // shifting a uint32_t by 32 is undefined
+    return true; // uint32 左移 32 位是未定义行为，默认路由单独处理
   }
   const uint32_t mask = ~uint32_t { 0 } << ( 32 - len );
   return ( addr & mask ) == ( prefix & mask );
@@ -51,7 +54,7 @@ void Router::route()
         continue;
       }
       if ( dgram.header.ttl <= 1 ) {
-        continue;
+        continue; // 减之前已经是 0，或减完会变成 0
       }
       --dgram.header.ttl;
       dgram.header.compute_checksum();

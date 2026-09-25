@@ -8,13 +8,15 @@
 
 using namespace std;
 
+// 实现思路：用操作系统的 TCPSocket 发一次 HTTP/1.1 GET。行尾必须是 \r\n。
+// Connection: close 让服务器回完就关写端；客户端要读到 EOF，一次 read 不够。
 void get_URL( const string& host, const string& path )
 {
   TCPSocket sock;
   sock.connect( Address { host, "http" } );
   const string req = "GET " + path + " HTTP/1.1\r\nHost: " + host + "\r\nConnection: close\r\n\r\n";
   sock.write( req );
-  sock.shutdown( SHUT_WR );
+  sock.shutdown( SHUT_WR ); // 本端不再发请求，服务器才能结束响应
   while ( not sock.eof() ) {
     string buf;
     sock.read( buf );

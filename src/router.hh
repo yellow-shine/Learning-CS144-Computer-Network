@@ -43,5 +43,5 @@ private:
 
   // The router's collection of network interfaces
   std::vector<std::shared_ptr<NetworkInterface>> interfaces_ {};
-  std::vector<Route> routes_ {};
+  std::vector<Route> routes_ {}; // 线性扫描即可；前缀越长越优先
 };

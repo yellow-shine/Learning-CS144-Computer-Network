@@ -4,6 +4,9 @@
 
 using namespace std;
 
+// 实现思路：一条 string 加下标 start_。peek() 必须是一整段连续 string_view，
+// deque 分片会让测试对不上。超出容量的尾部直接丢，不记入 bytes_pushed_。
+
 ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {}
 
 void Writer::push( string data )
@@ -11,6 +14,7 @@ void Writer::push( string data )
   if ( closed_ || data.empty() ) {
     return;
   }
+  // 只写得下还有空位的那一截。
   const uint64_t n = min( available_capacity(), static_cast<uint64_t>( data.size() ) );
   buffer_.append( data.data(), static_cast<size_t>( n ) );
   bytes_pushed_ += n;
@@ -46,6 +50,7 @@ void Reader::pop( uint64_t len )
   const uint64_t n = min( len, bytes_buffered() );
   start_ += n;
   bytes_popped_ += n;
+  // 已读走的前缀超过 4KiB 且占一半以上才压缩，避免每次 pop 都 O(n)。
   if ( start_ > 4096 && start_ * 2 >= buffer_.size() ) {
     buffer_.erase( 0, start_ );
     start_ = 0;
