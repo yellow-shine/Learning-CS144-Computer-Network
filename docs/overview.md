@@ -35,7 +35,7 @@
 
 - `string_view`：`Reader::peek()` 返回缓冲里一段连续视图，不拷贝。
 - `optional`：未收到 SYN 时 `TCPReceiver::isn_` 为空，因而没有 ackno；路由下一跳可以是直连（空）或网关。
-- 继承切开 Reader / Writer：二者继承同一 `ByteStream`，看到同一缓冲，接口互不混用。
+- 继承切开 Reader / Writer：二者继承同一 `ByteStream`，看到同一缓冲，接口互不混用。细节见 [docs/notes/byte-stream-interface-split.md](notes/byte-stream-interface-split.md)。
 
 ## 和 Go 的两处对照
 

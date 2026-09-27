@@ -47,6 +47,10 @@ public:
   const Writer& writer() const { return output_.writer(); }
 
 private:
+  void trim_to_window( uint64_t& first_index, std::string& data ) const;
+  void merge_pending( uint64_t first_index, std::string data );
+  void push_contiguous();
+
   ByteStream output_;
   uint64_t next_index_ {}; // 下一个要写入 ByteStream 的流下标
   // 不重叠的待组装区间：key 是起始下标。重复字节只留一份。

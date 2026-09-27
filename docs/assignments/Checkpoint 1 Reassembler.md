@@ -689,3 +689,300 @@ Invariant 3:
 这些概念后面会直接变成 TCP receiver 的核心逻辑。 check1
 
 如果你准备开始写，我建议下一步先不要看答案。我们可以直接拿 **3～4 个 insert() 例子手算 Reassembler 内部状态变化**，把 `first_unassembled / first_unacceptable / pending` 彻底搞清楚，再开始写 C++。
+
+---
+
+## 实现学习笔记：把 Reassembler 按职责拆开
+
+对应源码：[`reassembler.cc`](../../src/reassembler.cc) 和 [`reassembler.hh`](../../src/reassembler.hh)。环境配置与 Docker 测试命令见 [`README.md`](../../README.md)。
+
+这次重构保持算法和公开接口不变，主要改善变量命名、减少嵌套，并拆出三个私有函数。目标不是让行数最少，而是让读者能先理解主流程，再分别理解每个步骤。
+
+### 1. 四个成员分别表示什么？
+
+```cpp
+ByteStream output_;
+uint64_t next_index_ {};
+std::map<uint64_t, std::string> pending_ {};
+std::optional<uint64_t> eof_index_ {};
+```
+
+| 成员 | 含义 |
+| --- | --- |
+| `output_` | 接收已经按顺序组装好的数据；写入不代表 reader 已读走 |
+| `next_index_` | 下一个等待组装的字节下标，即 first unassembled |
+| `pending_` | 起始下标 → 待组装字符串，按下标有序；重叠或相邻区间会被合并 |
+| `eof_index_` | 流结束下标，即最后一个字节之后的位置；没有值表示尚未知晓 EOF |
+
+例如 `pending_ = { {5, "fgh"}, {10, "kl"} }` 表示 `[5, 8)` 和 `[10, 12)`。区间左闭右开，长度等于结束下标减去起始下标。
+
+`eof_index_` 不能简单用 0 表示未知，因为长度为 0 的空流也是合法输入。
+
+### 2. `insert()`：只组织流程和处理 EOF
+
+主流程可以读成：
+
+```text
+记录原始 EOF
+    ↓
+trim_to_window：裁剪窗口
+    ↓
+merge_pending：合并、去重区间
+    ↓
+push_contiguous：输出连续数据
+    ↓
+判断是否到达 EOF，关闭 writer
+```
+
+对应核心代码：
+
+```cpp
+if ( is_last_substring ) {
+  eof_index_ = first_index + data.size();
+}
+
+trim_to_window( first_index, data );
+merge_pending( first_index, move( data ) );
+push_contiguous();
+
+if ( eof_index_.has_value() && next_index_ >= *eof_index_ ) {
+  output_.writer().close();
+}
+```
+
+**为什么先记 EOF，再裁剪？** 假设容量为 4，收到 `insert(0, "abcdef", true)`：流长度是 6，但当前只能接收 `"abcd"`。若裁剪后再记 EOF，就会误记成 4，提前关闭。被裁掉的 `"ef"` 没有保存，需要后续重新收到。
+
+**为什么空数据不能让整个 `insert()` 直接返回？** `insert(0, "", true)` 表示合法空流，仍然需要执行关闭判断。只有 `merge_pending()` 对空数据直接返回，主流程继续执行。
+
+EOF 判断保留在主函数中，能直接看到“先记录、最后关闭”的顺序，没有必要把每个短判断都拆成函数。
+
+### 3. `trim_to_window()`：只留下允许接收的数据
+
+```cpp
+void Reassembler::trim_to_window( uint64_t& first_index, string& data ) const
+```
+
+两个引用参数允许函数同步修改字符串及其起始下标。末尾的 `const` 表示不修改 Reassembler 自身状态，不妨碍修改传入的引用参数。
+
+#### 计算窗口
+
+```cpp
+const uint64_t first_unassembled = next_index_;
+const uint64_t first_unacceptable = next_index_ + output_.writer().available_capacity();
+```
+
+可接收范围是 `[first_unassembled, first_unacceptable)`。
+
+例如总容量为 10，已写入 6 字节，reader 已读走 2 字节：
+
+```text
+ByteStream 未读字节 = 6 - 2 = 4
+available_capacity = 10 - 4 = 6
+first_unassembled = 6
+first_unacceptable = 6 + 6 = 12
+可接收窗口 = [6, 12)
+```
+
+等价地，右边界是 `reader 已读字节数 + 总容量 = 2 + 10 = 12`。
+
+这里**不能再减一次 pending 字节数**。pending 是窗口内已经收到的位置，窗口限制的是下标范围；它不是“再从右边界扣除已收到的数据”。
+
+#### 裁掉左侧旧数据
+
+```cpp
+if ( first_index < first_unassembled ) {
+  const uint64_t bytes_to_skip = min<uint64_t>( data.size(), first_unassembled - first_index );
+  data.erase( 0, bytes_to_skip );
+  first_index += bytes_to_skip;
+}
+```
+
+例如 `next_index_ = 5`，收到 `[3, 8) → "defgh"`。下标 3、4 已经输出，裁掉 `"de"` 后变成 `[5, 8) → "fgh"`。
+
+`min()` 保证最多删除实际存在的字节。若整段都是旧数据，字符串会被清空。
+
+#### 裁掉右侧越界数据
+
+```cpp
+if ( first_index >= first_unacceptable ) {
+  data.clear();
+} else if ( data.size() > first_unacceptable - first_index ) {
+  data.resize( first_unacceptable - first_index );
+}
+```
+
+- 起点就在窗口外：整段丢弃。
+- 起点在窗口内、尾部越界：只保留前缀。
+
+例如窗口为 `[5, 8)`，收到 `[6, 10) → "ghij"`，只保留 `[6, 8) → "gh"`。先判断起点是否越界，也避免后面的无符号减法下溢。
+
+### 4. `merge_pending()`：保存数据并消除重叠
+
+这个函数不负责输出，只维护待组装区间。空字符串提前返回，避免把整个函数再套进一层 `if`。
+
+#### 找到右侧位置，再检查前一个区间
+
+```cpp
+auto interval = pending_.upper_bound( first_index );
+```
+
+`upper_bound(x)` 返回第一个 key **严格大于** `x` 的元素。例如 key 为 2、8、15，`upper_bound(6)` 指向 8。
+
+新数据也可能与前一个区间重叠，所以继续检查：
+
+```cpp
+if ( interval != pending_.begin() ) {
+  auto previous_interval = prev( interval );
+  if ( previous_interval->first + previous_interval->second.size() >= first_index ) {
+    interval = previous_interval;
+  }
+}
+```
+
+- 先检查不是 `begin()`，才能安全取前一个元素。
+- 使用 `>=`，因为相邻也能合并：`[2, 5)` 与 `[5, 8)` 可以变成 `[2, 8)`。
+- 只需检查紧邻的前一个区间，因为已有区间有序且不重叠。
+
+#### 插入新区间，或扩展旧区间
+
+```cpp
+if ( interval == pending_.end() || interval->first > first_index ) {
+  interval = pending_.emplace_hint( interval, first_index, move( data ) );
+} else {
+  const uint64_t interval_end = interval->first + interval->second.size();
+  if ( first_index + data.size() > interval_end ) {
+    interval->second.append( data.substr( interval_end - first_index ) );
+  }
+}
+```
+
+经过前一步，如果找到了可以合并的前一个区间，就复用它；否则插入新区间。`emplace_hint()` 接收预计插入位置，map 仍负责维护正确顺序。
+
+这次重构把原先两个分支中重复的插入操作集中到一处。
+
+追加时只取未覆盖的后缀。例如：
+
+```text
+已有：[2, 6) → "cdef"
+新来：[4, 8) → "efgh"
+
+下标：2 3 4 5 6 7
+已有：c d e f
+新来：    e f g h
+```
+
+旧区间结束于 6，新字符串从 4 开始，所以偏移量为 `6 - 4 = 2`，`data.substr(2)` 是 `"gh"`。追加后得到 `[2, 8) → "cdefgh"`。如果新数据完全被旧区间覆盖，则无需追加。
+
+这里没有新增重叠内容冲突检测；学习场景按同一下标代表同一原始字节理解。
+
+#### 向右吞并后续区间
+
+```cpp
+auto next_interval = next( interval );
+while ( next_interval != pending_.end()
+        && interval->first + interval->second.size() >= next_interval->first ) {
+  const uint64_t interval_end = interval->first + interval->second.size();
+  if ( next_interval->first + next_interval->second.size() > interval_end ) {
+    interval->second.append( next_interval->second.substr( interval_end - next_interval->first ) );
+  }
+  next_interval = pending_.erase( next_interval );
+}
+```
+
+例如已有 `[2, 5) → "cde"` 和 `[8, 11) → "ijk"`，新来 `[5, 9) → "fghi"`：
+
+1. 先向左合并成 `[2, 9) → "cdefghi"`。
+2. 与右侧 `[8, 11)` 重叠，只追加 `"jk"`。
+3. 得到 `[2, 11) → "cdefghijk"`，删除被吸收的旧区间。
+
+`erase()` 返回下一个迭代器，因此用其返回值继续循环，不再使用已失效的迭代器。
+
+### 5. `push_contiguous()`：立即输出连续数据
+
+```cpp
+while ( not pending_.empty() && pending_.begin()->first == next_index_ ) {
+  auto interval = pending_.extract( pending_.begin() );
+  const uint64_t byte_count = interval.mapped().size();
+  output_.writer().push( move( interval.mapped() ) );
+  next_index_ += byte_count;
+}
+```
+
+map 按起始下标排序，只需检查最早的区间。如果 `next_index_ = 3`，最早区间却从 5 开始，说明 3、4 有缺口，后面的数据也不能输出。
+
+`extract()` 把节点移出 map，并交给 node handle 持有；`mapped()` 访问节点中的字符串。这让待组装数据可以转交给 ByteStream，而不必先复制一份再删除。
+
+**先取长度，再 move：** `std::move()` 允许接收方移动字符串，移动后不能依赖原字符串保留原内容和长度，所以提前保存 `byte_count`。
+
+在合法输入与当前不变量下，待输出区间已经经过窗口裁剪、起点等于 `next_index_`，整段应能写入 ByteStream，因此可以把 `next_index_` 增加整段长度。
+
+### 6. `count_bytes_pending()`：只统计等待组装的字节
+
+```cpp
+uint64_t byte_count = 0;
+for ( const auto& [first_index, data] : pending_ ) {
+  byte_count += data.size();
+}
+return byte_count;
+```
+
+`[first_index, data]` 是结构化绑定，分别对应 map 的 key 和 value。因为区间已经去重，直接相加各字符串长度即可。
+
+这里不包含已经进入 ByteStream、但尚未被 reader 读取的数据。也不额外维护计数成员，避免每次插入、合并和删除都要同步冗余状态。
+
+### 7. 完整推演：乱序、重叠、EOF 一起出现
+
+容量为 10，原始数据是 `"abcdefgh"`，整个过程中 reader 暂不读取。
+
+| 操作 | 处理重点 | `next_index_` | pending | ByteStream 未读内容 | writer 关闭？ |
+| --- | --- | ---: | --- | --- | --- |
+| 初始 | EOF 未知 | 0 | 空 | 空 | 否 |
+| `insert(5, "fgh", true)` | 记录 EOF = 8；前面有缺口 | 0 | `[5, 8) → "fgh"` | 空 | 否 |
+| `insert(0, "abc", false)` | 输出连续的开头 | 3 | `[5, 8) → "fgh"` | `"abc"` | 否 |
+| `insert(2, "cdef", false)` | 裁旧数据、合并重叠、填洞 | 8 | 空 | `"abcdefgh"` | 是 |
+
+第三次插入具体经过：
+
+```text
+收到 [2, 6) → "cdef"
+    ↓ 裁掉已输出的下标 2
+保留 [3, 6) → "def"
+    ↓ 与 [5, 8) → "fgh" 合并
+得到 [3, 8) → "defgh"
+    ↓ 起点正好等于 next_index_ = 3
+写入 ByteStream，next_index_ 更新为 8
+    ↓ 到达 eof_index_ = 8
+关闭 writer
+```
+
+此时 writer 已关闭，但 reader 尚未读空缓冲区：
+
+```text
+writer.is_closed() = true
+reader.is_finished() = false
+```
+
+等 `"abcdefgh"` 被读完，`reader.is_finished()` 才变成 `true`。
+
+### 8. 重构的边界与验证
+
+| 函数 | 回答的问题 |
+| --- | --- |
+| `insert()` | 一次插入按什么顺序处理？ |
+| `trim_to_window()` | 哪些输入字节可以接收？ |
+| `merge_pending()` | 如何保存数据，同时消除重叠？ |
+| `push_contiguous()` | 哪些数据现在可以输出？ |
+| `count_bytes_pending()` | 还有多少字节等待组装？ |
+
+这次修改提高的是可读性，并未更换数据结构、增加公开接口或改变容量与 EOF 规则。函数不是拆得越碎越好，而是每个函数承担一个能说清楚的职责。
+
+重构后已在 Docker 中实际运行：
+
+```bash
+./scripts/dev.sh bash -lc \
+  'cmake -S . -B build-linux -G Ninja && cmake --build build-linux --target check1'
+```
+
+结果为 **18/18 全部通过**，包含编译 fixture、功能测试和性能测试。测试通过是现有用例的验证，不是所有输入的形式化证明。
+
+本机 LSP 对 `std::optional` 和 `std::map::extract` 报错；两者都是 C++17 起提供的功能，而项目配置为 C++20。容器编译成功说明本次构建支持它们；本机诊断应另行检查语言标准和编译数据库配置，不能当作已通过的检查。
