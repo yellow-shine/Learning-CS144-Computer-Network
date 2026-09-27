@@ -6,7 +6,7 @@
    `Writer::push` 写入有容量上限的流；对端 `Reader::peek` / `pop` 取出。流结束靠 `close()`，出错靠 `set_error()`。
 
 2. **ByteStream → TCP 段（CP1–3）**  
-   `TCPSender` 按对端 window 切段，带 seqno、SYN/FIN、载荷。对端 `TCPReceiver` 把载荷按绝对序号交给 `Reassembler`，拼回 ByteStream，回 ackno + window。32-bit 环绕序号是 `Wrap32`。
+   `TCPSender` 按对端 window 切段，带 seqno、SYN/FIN、载荷。对端 `TCPReceiver` 把载荷按绝对序号交给 `Reassembler`，拼回 ByteStream，回 ackno + window。32-bit 环绕序号是 `Wrap32`。Sender 的切段、窗口和重传见 [docs/notes/tcp-sender.md](notes/tcp-sender.md)。
 
 3. **TCP 段 → IPv4 数据报**  
    段装进 IP（源/目的地址、TTL、checksum）。封装在课程已给的 `tcp_over_ip` / `tcp_minnow_socket`，本实验不重写。
