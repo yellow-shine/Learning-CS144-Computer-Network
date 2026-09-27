@@ -1,0 +1,279 @@
+{
+  "main": {
+    "id": "7e73d32f66f18607",
+    "type": "split",
+    "children": [
+      {
+        "id": "f8e01c9030aaf174",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "40aacbeddfc37037",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/assignments/Checkpoint 5.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Checkpoint 5"
+            }
+          },
+          {
+            "id": "1ba87dbfe40e1556",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/assignments/Checkpoint 5.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Checkpoint 5"
+            }
+          },
+          {
+            "id": "adf3fe2fc4bd90bc",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/assignments/Checkpoint 5.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Checkpoint 5"
+            }
+          },
+          {
+            "id": "bd74abcbd7865fb2",
+            "type": "leaf",
+            "state": {
+              "type": "code-space-view",
+              "state": {
+                "file": "src/reassembler.cc"
+              },
+              "icon": "lucide-file",
+              "title": "reassembler.cc"
+            }
+          }
+        ],
+        "currentTab": 3
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9fab8b9d02164ac9",
+    "type": "split",
+    "children": [
+      {
+        "id": "7b29ba4846801324",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f740f03da3eb2ad4",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "a82fac2c672dac90",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "05ac3b302f366b06",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "558498b6cfd8b05b",
+    "type": "split",
+    "children": [
+      {
+        "id": "05345da223913543",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b19fe915b1452d3d",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "src/reassembler.cc",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "1fc154b0957e61f4",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "1a2202e51aea5db1",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "eb21b50d0706b10e",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "061634c6cb5a91de",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "src/reassembler.cc",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ],
+        "currentTab": 4
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "realclaudian:Open Claudian": false,
+      "obsidian42-brat:BRAT": false,
+      "pdf-plus:PDF++: Toggle auto-copy": false,
+      "pdf-plus:PDF++: Toggle auto-focus": false,
+      "pdf-plus:PDF++: Toggle auto-paste": false,
+      "obsidian-git:Open Git source control": false,
+      "fix-math:Current file": false,
+      "remotely-save:Remotely Save": false,
+      "code-space:Open code space dashboard": false
+    }
+  },
+  "active": "bd74abcbd7865fb2",
+  "lastOpenFiles": [
+    "src/byte_stream.cc",
+    "src/network_interface.hh",
+    "src/network_interface.cc",
+    "src/byte_stream_helpers.cc",
+    "src/reassembler.cc",
+    "src/reassembler.hh",
+    "src/router.cc",
+    "src/router.hh",
+    "src/tcp_minnow_socket.cc",
+    "src/tcp_sender.hh",
+    "src/tcp_sender.cc",
+    "writeups/check7.md",
+    "writeups/check6.md",
+    "writeups/check5.md",
+    "writeups/check4.md",
+    "writeups/check3.md",
+    "writeups/check2.md",
+    "writeups/check1.md",
+    "writeups/check0.md",
+    "docs/视频列表/视频列表.md",
+    "docs/assignments/Checkpoint 3：实现 TCP Sender.md",
+    "docs/assignments/Checkpoint 2  TCPReceiver.md",
+    "docs/assignments/Checkpoint 7 putting it all together.md",
+    "docs/assignments/Checkpoint 6 IPv4 Router.md",
+    "docs/assignments/Checkpoint 5 down the stack (the network interface).md",
+    "docs/assignments/Checkpoint 4 measuring the real world.md",
+    "docs/assignments/Checkpoint 1 Reassembler.md",
+    "docs/assignments/Checkpoint 0 networking warmup & ByteStream.md",
+    "Untitled.md",
+    "docs/superpowers/specs/2026-09-09-cs144-learning-design.md",
+    "docs/superpowers/plans/2026-09-09-cs144-reference-implementation.md",
+    "README.md",
+    "docs/SOURCES.md",
+    "docs/RUN.md",
+    "Reference.md",
+    "docs/verification.md"
+  ]
+}

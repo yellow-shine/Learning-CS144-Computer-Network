@@ -3,3 +3,6 @@
 /.vscode
 *.swp
 /.cache
+/.obsidian/plugins/remotely-save
+
+build*

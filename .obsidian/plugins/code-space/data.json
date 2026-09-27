@@ -1,0 +1,29 @@
+{
+  "extensions": "py, c, cpp, h, hpp, js, ts, jsx, tsx, json, mjs, cjs, css, scss, sass, less, html, htm, rs, go, java, sql, php, rb, sh, yaml, xml, cs, yml, cc, hh",
+  "showLineNumbers": true,
+  "editorWordWrap": true,
+  "editorFontSize": 18,
+  "embedFontSize": 15,
+  "embedWordWrap": true,
+  "maxEmbedLines": 20,
+  "defaultEncoding": "auto",
+  "fileEncodings": {},
+  "newFileFolderPath": "",
+  "newFileLocationMode": "custom",
+  "dashboardState": {
+    "searchQuery": "",
+    "filterExt": [],
+    "filterFolder": [],
+    "sortBy": "date",
+    "sortDesc": true
+  },
+  "enableExternalMounts": true,
+  "externalMounts": [],
+  "externalMountLinkType": "auto",
+  "terminalEnabled": false,
+  "terminalShell": "",
+  "terminalFontSize": 14,
+  "terminalScrollback": 2000,
+  "terminalMaxSessions": 8,
+  "ignoredFiles": []
+}
